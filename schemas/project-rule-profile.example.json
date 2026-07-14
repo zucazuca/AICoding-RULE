@@ -1,0 +1,29 @@
+{
+  "$comment": "AICoding-RULE 项目规则档案示例。安装脚本写入项目根目录为 .aicoding-rule.json；adapters 与 overrides 由项目按需维护。",
+  "baselineVersion": "0.1.0",
+  "profile": "default",
+  "installedAt": "2026-07-14 00:00:00",
+  "managedFiles": [
+    "docs/ai/01_READING_RULES.md",
+    "docs/ai/02_EXECUTION_RULES.md",
+    "docs/ai/03_TESTING_RULES.md",
+    "docs/ai/04_OUTPUT_RULES.md"
+  ],
+  "adapters": [
+    "python-fastapi",
+    "react-typescript",
+    "postgresql",
+    "docker-compose",
+    "windows-powershell",
+    "local-gui-automation"
+  ],
+  "overrides": [
+    {
+      "rule": "core/02_EXECUTION_RULES#5 文件规模控制",
+      "decision": "项目上下文豁免：保持现有单体结构，不做无需求拆分",
+      "approvedBy": "developer",
+      "date": "2026-07-14"
+    }
+  ],
+  "notes": "overrides 记录项目对基线的合法覆盖，Compare 脚本报告 DRIFT/CUSTOM 时先查此处。"
+}
