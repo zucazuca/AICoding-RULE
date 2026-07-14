@@ -1,6 +1,6 @@
 # AICoding-RULE — 可复用 AICoding / VibeCoding 规则基线
 
-> 版本见 `VERSION`；变更见 `CHANGELOG.md`。
+> 版本见 `VERSION`；变更见 `CHANGELOG.md`；**新/旧项目接入与日常使用见 `USAGE.md`**。
 > 来源：`E:\work` 下多个真实项目（含线索分发、AI 客服、剪辑工具、二手车系统）多轮实践验证的规则资产整理，
 > 不是从零设计的新规则体系。来源盘点见 `reports/rule-source-inventory.md`，冲突裁决见 `reports/rule-conflict-report.md`。
 
