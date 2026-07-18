@@ -37,6 +37,17 @@
 - Isolation-Tests: {{CROSS_USER_TENANT_MERCHANT_RESULTS}}
 - Contract-Tests: {{REQUEST_RESPONSE_DATA_RESULTS}}
 
+## Release-Artifact-Evidence
+
+- Release-Artifact-Required: {{YES_NO}}
+- Artifact-Source-Commit: {{FULL_CANDIDATE_COMMIT_OR_NOT_APPLICABLE}}
+- Artifact-Version: {{VERSION_OR_NOT_APPLICABLE}}
+- Artifact-Digest: {{ALGORITHM_AND_DIGEST_OR_NOT_APPLICABLE}}
+- Artifact-Location: {{IMMUTABLE_LOCATION_OR_NOT_APPLICABLE}}
+- Artifact-Build-Command: {{COMMAND_OR_NOT_APPLICABLE}}
+- Artifact-Build-Result: {{EXIT_CODE_AND_EVIDENCE_OR_NOT_APPLICABLE}}
+- Artifact-Test-Results: {{RESULTS_OR_NOT_APPLICABLE}}
+
 ## Failures
 
 | ID | Severity | Preconditions | Reproduction | Expected | Actual | Evidence | Impact | Blocks-Push | Blocks-Release |

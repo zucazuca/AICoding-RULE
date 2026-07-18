@@ -37,6 +37,7 @@ git rev-parse HEAD 等于 Candidate-Commit
 Frozen-Requirements 与 Acceptance-Matrix 完整
 Environment 与 Test-Data 可用
 Required-Tests 可执行
+发布任务的 Release-Artifact-Required、构建命令和制品位置明确
 ~~~
 
 哈希无法解析或 Actual-HEAD 不一致时停止，不得测试其他代码：
@@ -59,6 +60,8 @@ TEST_BLOCKED <requested-hash-or-NONE> reason=HASH_NOT_VERIFIED
 - 原功能回归、配置缺失和外部依赖失败；
 - 浏览器路径、角色、步骤、预期/实际、控制台/网络错误；
 - 执行包指定的安全、迁移、隔离和发布风险。
+
+当 Release-Artifact-Required=yes 时，从 Candidate-Commit 的干净隔离工作树按冻结命令构建一次不可变制品，记录 Artifact-Source-Commit、Artifact-Version、Artifact-Digest、位置和构建证据，并直接测试该制品。构建失败、来源不符、摘要不可复现或制品专项测试未通过时不得 PASS 或 CONDITIONAL_PASS。
 
 测试可以生成临时缓存、覆盖率或构建产物，但不得提交或保留受控源文件变化。测试结束时记录 Final-git-status。
 

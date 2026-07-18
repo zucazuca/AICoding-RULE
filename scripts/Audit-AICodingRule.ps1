@@ -166,6 +166,7 @@ foreach ($mapping in $optionalMappings) {
 }
 if ($optionalDetected) {
     $missingOptionalFiles = @()
+    $driftedOptionalFiles = @()
     $optionalSourcesComplete = $true
     foreach ($mapping in $optionalMappings) {
         $sourceRoot = Join-Path $BaselineRoot $mapping.Source
@@ -179,12 +180,22 @@ if ($optionalDetected) {
             $targetPath = Join-Path $ProjectPath (Join-Path $mapping.Target $relativePath)
             if (-not (Test-Path -LiteralPath $targetPath -PathType Leaf)) {
                 $missingOptionalFiles += $targetPath.Substring($ProjectPath.Length).TrimStart([char[]]@('\', '/'))
+                continue
+            }
+            $sourceHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $sourceFile.FullName).Hash
+            $targetHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $targetPath).Hash
+            if ($sourceHash -ne $targetHash) {
+                $driftedOptionalFiles += $targetPath.Substring($ProjectPath.Length).TrimStart([char[]]@('\', '/'))
             }
         }
     }
     if ($missingOptionalFiles.Count -gt 0) {
         Add-Finding 'WARN' '可选三权工作流' ("模块为部分安装，缺少：" + ($missingOptionalFiles -join '；'))
-    } elseif ($optionalSourcesComplete) {
+    }
+    if ($driftedOptionalFiles.Count -gt 0) {
+        Add-Finding 'WARN' '可选三权工作流' ("模块文件内容与基线不一致；安装器不会覆盖，请人工比较并合并：" + ($driftedOptionalFiles -join '；'))
+    }
+    if ($missingOptionalFiles.Count -eq 0 -and $driftedOptionalFiles.Count -eq 0 -and $optionalSourcesComplete) {
         Write-Host "可选三权工作流：已安装（默认关闭，按风险显式启用）。" -ForegroundColor Green
     }
 }

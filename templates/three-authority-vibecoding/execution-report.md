@@ -63,6 +63,16 @@ git diff --name-status {{FULL_BASE_COMMIT}}..{{FULL_CANDIDATE_COMMIT}}
 {{OUTPUT}}
 ~~~
 
+- git log / parent evidence:
+
+~~~text
+git log --oneline {{FULL_BASE_COMMIT}}..{{FULL_CANDIDATE_COMMIT}}
+{{OUTPUT}}
+
+git rev-list --parents {{FULL_BASE_COMMIT}}..{{FULL_CANDIDATE_COMMIT}}
+{{OUTPUT}}
+~~~
+
 - git status --short:
 
 ~~~text

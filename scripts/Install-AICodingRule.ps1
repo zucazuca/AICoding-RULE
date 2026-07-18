@@ -297,19 +297,28 @@ if ($IncludeThreeAuthorityWorkflow) {
     Write-Host "可选工作流入口：docs\ai\workflows\three-authority-vibecoding\README.md"
     $optionalItems = @($Plan | Where-Object { $_.Optional })
     $optionalInstalledCount = 0
+    $optionalDriftCount = 0
     foreach ($optionalItem in $optionalItems) {
         $optionalTarget = Join-Path $ProjectPath $optionalItem.Target
         if (Test-Path -LiteralPath $optionalTarget -PathType Leaf) {
             $optionalInstalledCount++
+            $optionalSource = Join-Path $BaselineRoot $optionalItem.Template
+            $sourceHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $optionalSource).Hash
+            $targetHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $optionalTarget).Hash
+            if ($sourceHash -ne $targetHash) {
+                $optionalDriftCount++
+            }
         }
     }
     $optionalPendingCount = @($ToCreate | Where-Object { $_.Optional }).Count
     if ($WhatIfPreference -and $optionalPendingCount -gt 0) {
         Write-Host "状态：计划安装或补齐（WhatIf 未写入；当前 $optionalInstalledCount/$($optionalItems.Count)），完成后仍默认关闭。"
-    } elseif ($optionalInstalledCount -eq $optionalItems.Count) {
+    } elseif ($optionalInstalledCount -eq $optionalItems.Count -and $optionalDriftCount -eq 0) {
         Write-Host "状态：已安装但默认关闭，按风险显式启用。"
+    } elseif ($optionalInstalledCount -eq $optionalItems.Count) {
+        Write-Host "状态：文件齐全但 $optionalDriftCount 个文件与基线不一致；保持不覆盖，请运行 Audit 后人工比较并合并。" -ForegroundColor Yellow
     } elseif ($optionalInstalledCount -gt 0) {
-        Write-Host "状态：部分安装（$optionalInstalledCount/$($optionalItems.Count)），不得启用；重新运行安装或人工处理冲突。" -ForegroundColor Yellow
+        Write-Host "状态：部分安装（$optionalInstalledCount/$($optionalItems.Count)，内容差异 $optionalDriftCount），不得启用；重新运行安装或人工处理冲突。" -ForegroundColor Yellow
     } else {
         Write-Host "状态：未安装（写操作未执行）。" -ForegroundColor Yellow
     }

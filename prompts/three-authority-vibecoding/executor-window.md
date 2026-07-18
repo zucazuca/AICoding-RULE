@@ -44,6 +44,14 @@ Allowed-Files / Forbidden-Files 是否明确且存在
 
 预检不通过时不得施工，也不得由执行窗口自行输出审批状态。保持在 PLAN_APPROVED，回传预检报告、证据和 reason code，请求审批窗口裁决 REPLAN 或 REJECT_SCOPE。BLOCKED_ENVIRONMENT 只是原因码，不代表完成或通过。
 
+预检通过后、任何施工写操作前输出：
+
+~~~text
+IMPLEMENTING <Task-ID> <Plan-Revision> <Base-Commit>
+~~~
+
+只有输出 IMPLEMENTING 后才可施工。收到 R1/R2 后也必须重新完成预检并输出 IMPLEMENTING；该状态不代表施工完成或验收通过。
+
 ## 施工
 
 1. 只修改 Allowed-Files；
@@ -61,8 +69,10 @@ Allowed-Files / Forbidden-Files 是否明确且存在
 2. 只暂存 Allowed-Files，并检查 git diff --cached --name-only；
 3. 创建本地候选提交；
 4. 用 git rev-parse HEAD 获取未缩写 Candidate-Commit；
-5. 用 Base-Commit..Candidate-Commit 生成差异统计和文件清单；
-6. 确认候选提交后 git status --short 符合执行包要求。
+5. 用 `git merge-base --is-ancestor <Base-Commit> <Candidate-Commit>` 确认候选继承冻结基线；
+6. 用 `git log --oneline <Base-Commit>..<Candidate-Commit>` 和 `git rev-list --parents <Base-Commit>..<Candidate-Commit>` 记录提交及父对象；
+7. 用 Base-Commit..Candidate-Commit 生成差异统计和文件清单；
+8. 确认候选提交后 git status --short 符合执行包要求。
 
 本地候选提交不代表审批通过、测试通过，也不授予推送、合并或发布权限。
 
@@ -87,6 +97,10 @@ APPROVE_PUSH <full-candidate-hash>
 APPROVE_RELEASE <full-candidate-hash>
 ~~~
 
-推送成功输出 PUSHED；发布成功输出 RELEASED，并携带远端、分支、制品、环境和实际结果。任一批准不隐含另一批准。
+执行批准动作前必须重新确认 `git rev-parse HEAD` 等于批准哈希、`git status --short` 为空，并核对 Task-ID、Plan-Revision、远端、分支和目标环境。任一项不符立即停止，不得改用其他提交。
+
+推送信封必须包含 Push-Remote、Push-Ref、Push-Mode=fast-forward-only 和 Expected-Remote-Hash。先用 `git ls-remote` 核对远端当前哈希，再使用精确对象引用，例如 `git push <remote> <full-candidate-hash>:<Push-Ref>`；推送后再次核对远端实际哈希，匹配后才输出 PUSHED。本工作流禁止 `--force`、`--force-with-lease` 和删除远端引用；远端偏离或普通推送失败时停止并请求 REPLAN。
+
+发布信封必须携带独立测试通过的 Artifact-Digest；L3 或项目策略要求 Owner 时，还必须携带绑定同一摘要的 Owner-Evidence。只可从登记位置提升或部署该不可变制品，不得重新构建、替换标签指向或改用同版本的其他摘要；发布前后都核对实际摘要。匹配后才输出 RELEASED，并携带远端、分支、Candidate-Commit、制品、Artifact-Digest、环境和实际结果。制品缺失或摘要不符时停止并请求重新测试/批准。任一批准不隐含另一批准。
 
 ---

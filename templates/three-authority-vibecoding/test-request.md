@@ -37,6 +37,15 @@
 
 1. {{REQUIRED_TEST}}
 
+## Release-Artifact
+
+- Release-Artifact-Required: {{YES_NO}}
+- Artifact-Build-Command: {{COMMAND_OR_NOT_APPLICABLE}}
+- Artifact-Format: {{FORMAT_OR_NOT_APPLICABLE}}
+- Artifact-Location: {{IMMUTABLE_LOCATION_OR_NOT_APPLICABLE}}
+- Artifact-Provenance-Rule: source commit must equal Candidate-Commit; report version and digest
+- Artifact-Required-Tests: {{TESTS_OR_NOT_APPLICABLE}}
+
 ## Known-Constraints
 
 {{OBJECTIVE_CONSTRAINTS_ONLY}}

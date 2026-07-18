@@ -86,9 +86,19 @@
 1. 只暂存 Allowed-Files，并核对 git diff --cached --name-only。
 2. 完成规定自测后创建本地候选提交。
 3. 用 git rev-parse HEAD 返回完整 Candidate-Commit。
-4. 本地提交不代表允许推送、合并或发布。
-5. CANDIDATE_READY 回传后候选冻结；任何变化必须创建新哈希。
-6. 禁止 amend 后继续沿用旧哈希。
+4. 用 git merge-base --is-ancestor <Base-Commit> <Candidate-Commit> 验证基线祖先关系。
+5. 用 git log --oneline 和 git rev-list --parents 记录 Base-Commit..Candidate-Commit 的提交来源。
+6. 本地提交不代表允许推送、合并或发布。
+7. CANDIDATE_READY 回传后候选冻结；任何变化必须创建新哈希。
+8. 禁止 amend 后继续沿用旧哈希。
+
+## Start-Format
+
+强制预检通过后、任何施工写操作前输出：
+
+~~~text
+IMPLEMENTING <Task-ID> <Plan-Revision> <Base-Commit>
+~~~
 
 ## Return-Format
 

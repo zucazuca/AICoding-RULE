@@ -28,6 +28,7 @@ Verification: git diff --check + 相对链接检查
 
 ~~~text
 PLAN_APPROVED TASK-102 P1 1111111111111111111111111111111111111111
+IMPLEMENTING TASK-102 P1 1111111111111111111111111111111111111111
 CANDIDATE_READY aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 APPROVE_TEST aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 TEST_REQUEST aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
@@ -42,10 +43,18 @@ APPROVE_PUSH aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 审批窗口将其判定为 L3，执行包冻结迁移、回滚、历史数据、越权测试和隔离测试。执行窗口在独立分支创建候选；测试窗口从该候选建立隔离工作树，验证升级/回滚、不同角色、跨租户拒绝和数据一致性。
 
 ~~~text
+PLAN_APPROVED TASK-201 P1 2222222222222222222222222222222222222222
+IMPLEMENTING TASK-201 P1 2222222222222222222222222222222222222222
 CANDIDATE_READY bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
 APPROVE_TEST bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
 TEST_REQUEST bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+Artifact-Source-Commit: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+Artifact-Digest: sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 PASS bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+Push-Remote: origin
+Push-Ref: refs/heads/main
+Push-Mode: fast-forward-only
+Expected-Remote-Hash: 2222222222222222222222222222222222222222
 APPROVE_PUSH bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
 PUSHED bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
 OWNER_APPROVAL_REQUIRED bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
@@ -53,7 +62,7 @@ APPROVE_RELEASE bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
 RELEASED bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
 ~~~
 
-APPROVE_RELEASE 必须引用已记录的人工 Owner-Decision；审批窗口不能自行替代。
+APPROVE_RELEASE 必须引用绑定 TASK-201、候选 bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb、生产环境、摘要 sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff、Owner 身份和时间戳的人工 Owner-Decision；审批窗口不能自行替代。执行窗口只提升这个已测试制品，不得重新构建。
 
 ## 4. R1 后创建新候选并重新测试
 
@@ -67,6 +76,7 @@ R1 cccccccccccccccccccccccccccccccccccccccc
 返工修复了一个边界条件。执行窗口不得改写旧提交并沿用旧哈希，而要创建新候选：
 
 ~~~text
+IMPLEMENTING TASK-103 P1 3333333333333333333333333333333333333333
 CANDIDATE_READY dddddddddddddddddddddddddddddddddddddddd
 APPROVE_TEST dddddddddddddddddddddddddddddddddddddddd
 TEST_REQUEST dddddddddddddddddddddddddddddddddddddddd

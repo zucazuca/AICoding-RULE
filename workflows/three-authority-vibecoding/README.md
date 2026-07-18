@@ -39,14 +39,16 @@ VibeCoding 三权分离治理工作流是一套 Optional Advanced Workflow（可
 ## 标准流程
 
 ~~~text
-PLAN_APPROVED
+PLAN_APPROVED <Task-ID> <Plan-Revision> <Base-Commit>
+  -> 执行窗口完成强制预检
+  -> IMPLEMENTING <Task-ID> <Plan-Revision> <Base-Commit>
   -> 执行窗口施工和自测
   -> 创建本地候选提交
   -> CANDIDATE_READY <full-hash>
   -> 审批窗口审查同一完整哈希
   -> APPROVE_TEST <full-hash>
   -> TEST_REQUEST <full-hash>
-  -> PASS / CONDITIONAL_PASS
+  -> PASS / CONDITIONAL_PASS（发布任务同时绑定已测试 Artifact-Digest）
   -> APPROVE_PUSH <full-hash>
   -> PUSHED <full-hash>
   -> OWNER_APPROVAL_REQUIRED <full-hash>（L3 生产发布）
@@ -64,6 +66,10 @@ PLAN_APPROVED
 ## Git 哈希证据链
 
 审批窗口和测试窗口必须绑定同一个 Candidate-Commit 完整哈希。候选回传后立即冻结；任何代码变化都必须创建新候选提交。
+
+审批窗口还必须确认 `git merge-base --is-ancestor <Base-Commit> <Candidate-Commit>` 成功。目标分支偏离冻结基线且计划未定义集成策略时必须 REPLAN，不得把无关历史或隐式合并纳入候选。
+
+发布任务由测试窗口或隔离 CI 从冻结候选构建一次不可变制品并验证摘要。APPROVE_RELEASE 必须绑定该摘要；L3 或项目策略要求 Owner 时，人工 Owner 也必须批准同一摘要。执行窗口只提升该制品，不得在批准后重新构建。
 
 amend、rebase、squash、merge、cherry-pick、冲突修复或其他代码变化产生新哈希后：
 

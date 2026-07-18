@@ -42,9 +42,21 @@ Candidate-Commit 是审批和测试共同引用的不可变审查对象。执行
 - 审批窗口核对 Base-Commit 到 Candidate-Commit 的实际差异；
 - 测试窗口只检出并测试该 Candidate-Commit。
 
+## 基线与候选关系
+
+进入 APPROVE_TEST 前必须同时证明：
+
+1. Base-Commit 和 Candidate-Commit 都能解析为完整提交对象；
+2. `git merge-base --is-ancestor <Base-Commit> <Candidate-Commit>` 返回成功；
+3. 目标分支仍符合冻结计划中的基线或集成策略；
+4. 审查范围是明确的 `<Base-Commit>..<Candidate-Commit>`；
+5. `git log --oneline <Base-Commit>..<Candidate-Commit>` 和 `git rev-list --parents <Base-Commit>..<Candidate-Commit>` 已记录，合并提交和旁支历史都在计划内。
+
+未被冻结集成策略覆盖的目标分支漂移、祖先关系不成立、未声明的合并/旁支历史或集成策略缺失时必须 REPLAN，不得进入测试。
+
 ## 结果失效
 
-以下任一动作产生新提交对象后，旧审批与测试结论不得用于新哈希：
+以下任一动作产生新提交对象后，旧审批、测试与 Owner 结论不得用于新哈希：
 
 - amend、rebase、squash、merge、cherry-pick；
 - 冲突修复；
@@ -53,6 +65,15 @@ Candidate-Commit 是审批和测试共同引用的不可变审查对象。执行
 - 测试时 Actual-HEAD 与 Candidate-Commit 不一致。
 
 推送同一个提交对象本身不改变哈希；但合并提交、发布制品或部署内容必须能追溯到被批准的 Candidate-Commit。
+
+## 推送、发布与 Owner 证据
+
+- APPROVE_PUSH 的正式信封必须包含 Push-Remote、Push-Ref、Push-Mode=fast-forward-only 和 Expected-Remote-Hash。推送前后都核对远端实际哈希，并使用完整 Candidate-Commit 的显式 refspec。
+- 本工作流禁止强制推送。远端偏离 Expected-Remote-Hash 或普通推送失败时停止并 REPLAN，不得改用 `--force`、`--force-with-lease` 或删除远端引用。
+- 需要发布时，TEST_REQUEST 必须声明 Release-Artifact-Required、构建命令和制品位置。测试窗口或隔离 CI 从完整 Candidate-Commit 的干净工作树构建一次不可变制品，计算 Artifact-Digest，并在独立测试报告中记录 Artifact-Source-Commit、构建证据和制品测试结果。
+- APPROVE_RELEASE 必须绑定 Task-ID、完整 Candidate-Commit、目标环境和同一制品版本/Artifact-Digest；L3 或项目策略要求 Owner 时，还必须绑定决定、Owner 身份和带时区时间戳。
+- 发布动作只能提升或部署已测试、已批准的同一制品，不得重新构建。制品缺失、重建或摘要变化时，旧测试、发布批准和 Owner-Evidence 立即失效，必须对新制品重新测试和批准。
+- 任一绑定字段变化都会使旧 Owner-Evidence 失效；批准推送不隐含批准发布，批准发布也不隐含推送。
 
 ## 必须 REPLAN
 
