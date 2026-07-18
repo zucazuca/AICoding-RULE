@@ -899,7 +899,19 @@ git merge --ff-only origin/master
 git merge --ff-only fix/three-authority-state-contract
 ~~~
 
-预期：仅快进成功。未经新的明确授权不推送远端。
+预期：仅快进成功。
+
+- [ ] **步骤 4：推送上游 master**
+
+用户已明确授权完成提交并推送。运行：
+
+~~~powershell
+git push origin master
+git rev-parse HEAD
+git rev-parse origin/master
+~~~
+
+预期：推送成功，HEAD 与 origin/master 逐字符一致。
 
 ## 任务 7：只同步实际变化的分发文件到 gaozong
 
@@ -1015,9 +1027,21 @@ git status --short
 git merge --ff-only fix/three-authority-state-contract-sync
 ~~~
 
-预期：仅快进成功。未经新的明确授权不推送远端。
+预期：仅快进成功。
 
-- [ ] **步骤 3：在两个主仓库执行最终检查**
+- [ ] **步骤 3：推送 gaozong master**
+
+运行：
+
+~~~powershell
+git push origin master
+git rev-parse HEAD
+git rev-parse origin/master
+~~~
+
+预期：推送成功，HEAD 与 origin/master 逐字符一致。
+
+- [ ] **步骤 4：在两个主仓库执行最终检查**
 
 上游：
 
@@ -1035,9 +1059,9 @@ git status --short
 git log -3 --oneline
 ~~~
 
-预期：上游自检和冒烟通过；gaozong Audit WARN 0；两个 master 工作区均为空；VERSION 和 schema 仍为 0.2.0；没有远端推送。
+预期：上游自检和冒烟通过；gaozong Audit WARN 0；两个 master 工作区均为空；VERSION 和 schema 仍为 0.2.0；两个 origin/master 均等于本地 master。
 
-- [ ] **步骤 4：清理隔离工作树和已合并临时分支**
+- [ ] **步骤 5：清理隔离工作树和已合并临时分支**
 
 仅在确认两个 master 都包含对应提交、验证全部通过后，使用 finishing-a-development-branch 流程安全清理两个隔离工作树与已合并分支。不得删除未合并或含未提交修改的工作树。
 
