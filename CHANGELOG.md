@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## 0.2.0（2026-07-18）
+
+新增可选高级治理能力（P1-AICODING-RULE-THREE-AUTHORITY-WORKFLOW-1）。
+
+- 新增 Three-Authority VibeCoding Governance：风险分级、唯一状态机、完整哈希交接契约和五类示例。
+- 新增审批、执行、测试三个模型无关角色 Prompt，以及五份结构化交接模板。
+- 统一为“本地候选提交 → 候选审查 → 独立测试”的不可变哈希证据链；候选变化必须重新审查和测试。
+- 核心规则只增加默认关闭的轻量入口；三个长 Prompt 不进入 Required Reading。
+- Install 新增可选模块安装开关；启用后的项目文件自包含，不依赖跨目录读取。
+- 修复重复安装重写 profile、清空 adapters/overrides 的问题，保持幂等和合法扩展字段。
+
 ## 0.1.0（2026-07-14）
 
 首个可复用基线（P0-AICODING-RULE-REUSABLE-BASELINE-1）。

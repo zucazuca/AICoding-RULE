@@ -115,7 +115,7 @@ foreach ($mf in $managedFiles) {
         $anyBlock = $true
         $ver = $m.Groups['ver'].Value
         if ($ver -ne $BaselineVersion) {
-            Add-Finding 'WARN' '基线版本' "$(Split-Path $mf -Leaf) 受控区块版本 $ver 落后于基线 $BaselineVersion（用 Compare/Install 升级）"
+            Add-Finding 'WARN' '基线版本' "$(Split-Path $mf -Leaf) 受控区块版本 $ver 落后于基线 $BaselineVersion（按 USAGE 的 Compare/备份/重建流程升级）"
         }
     }
 }
@@ -139,6 +139,53 @@ if (Test-Path $readmePath) {
                 Add-Finding 'WARN' '引用失效' "README 引用不存在：$ref"
             }
         }
+    }
+}
+
+# 8. 可选三权分离工作流完整性（未安装时保持中性）
+$optionalMappings = @(
+    @{
+        Source = 'workflows\three-authority-vibecoding'
+        Target = 'docs\ai\workflows\three-authority-vibecoding'
+    }
+    @{
+        Source = 'prompts\three-authority-vibecoding'
+        Target = 'docs\ai\prompts\three-authority-vibecoding'
+    }
+    @{
+        Source = 'templates\three-authority-vibecoding'
+        Target = 'docs\ai\templates\three-authority-vibecoding'
+    }
+)
+$optionalDetected = $false
+foreach ($mapping in $optionalMappings) {
+    if (Test-Path -LiteralPath (Join-Path $ProjectPath $mapping.Target)) {
+        $optionalDetected = $true
+        break
+    }
+}
+if ($optionalDetected) {
+    $missingOptionalFiles = @()
+    $optionalSourcesComplete = $true
+    foreach ($mapping in $optionalMappings) {
+        $sourceRoot = Join-Path $BaselineRoot $mapping.Source
+        if (-not (Test-Path -LiteralPath $sourceRoot -PathType Container)) {
+            $optionalSourcesComplete = $false
+            Add-Finding 'WARN' '可选三权工作流' "基线源目录不存在：$($mapping.Source)"
+            continue
+        }
+        foreach ($sourceFile in @(Get-ChildItem -LiteralPath $sourceRoot -Recurse -File)) {
+            $relativePath = $sourceFile.FullName.Substring($sourceRoot.Length).TrimStart([char[]]@('\', '/'))
+            $targetPath = Join-Path $ProjectPath (Join-Path $mapping.Target $relativePath)
+            if (-not (Test-Path -LiteralPath $targetPath -PathType Leaf)) {
+                $missingOptionalFiles += $targetPath.Substring($ProjectPath.Length).TrimStart([char[]]@('\', '/'))
+            }
+        }
+    }
+    if ($missingOptionalFiles.Count -gt 0) {
+        Add-Finding 'WARN' '可选三权工作流' ("模块为部分安装，缺少：" + ($missingOptionalFiles -join '；'))
+    } elseif ($optionalSourcesComplete) {
+        Write-Host "可选三权工作流：已安装（默认关闭，按风险显式启用）。" -ForegroundColor Green
     }
 }
 

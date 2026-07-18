@@ -1,6 +1,6 @@
 {
   "$comment": "AICoding-RULE 项目规则档案示例。安装脚本写入项目根目录为 .aicoding-rule.json；adapters 与 overrides 由项目按需维护。",
-  "baselineVersion": "0.1.0",
+  "baselineVersion": "0.2.0",
   "profile": "default",
   "installedAt": "2026-07-14 00:00:00",
   "managedFiles": [

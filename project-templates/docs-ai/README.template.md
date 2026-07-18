@@ -45,6 +45,14 @@ docs/ai/04_OUTPUT_RULES.md
 |---|---|
 | {{SCENE_1}} | `{{DOC_PATH_1}}` |
 
+## 可选高级工作流
+
+Three-Authority VibeCoding Governance 默认关闭，不属于上述 Required Reading。只有任务经过风险分级并显式启用、且项目已安装可选模块后，才按需进入：
+
+~~~text
+docs/ai/workflows/three-authority-vibecoding/README.md
+~~~
+
 ## 历史追溯 / 归档入口
 
 以下文件**不是当前项目事实**，普通任务不得默认读取；仅在追溯历史决策或旧结论来源时按需读取：

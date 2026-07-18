@@ -1,6 +1,6 @@
 # AICoding-RULE 使用指南
 
-> 适用版本：0.1.0+。本指南回答"拿到这个规则库后怎么用"，分**新项目**与**旧项目**两种情形。
+> 适用版本：0.2.0+。本指南回答"拿到这个规则库后怎么用"，分**新项目**与**旧项目**两种情形。
 > 设计背景与目录职责见 `README.md`；来源与裁决见 `reports/`。
 
 ------
@@ -52,7 +52,25 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Install-AICodingRu
 
 并在任务中要求 AI 按需阅读对应的 `adapters/<name>/RULES.md`（可在项目 CLAUDE.md 的必读顺序后追加一行说明）。
 
-### 步骤 5：独立提交
+### 步骤 5（可选）：安装三权分离治理模块
+
+Three-Authority VibeCoding Governance 是默认关闭的高级工作流。普通安装不会复制或启用它；先按风险判断确有需要，再执行：
+
+~~~powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Install-AICodingRule.ps1 -ProjectPath <项目路径> -IncludeThreeAuthorityWorkflow
+~~~
+
+脚本只创建缺失文件，分别落在：
+
+~~~text
+docs/ai/workflows/three-authority-vibecoding/
+docs/ai/prompts/three-authority-vibecoding/
+docs/ai/templates/three-authority-vibecoding/
+~~~
+
+安装后的项目自包含，不在阅读或运行时访问基线仓库。模块不进入 Required Reading；只有任务按 L0-L3 风险规则显式启用后，才从工作流 README 进入。
+
+### 步骤 6：独立提交
 
 项目里新增的规则文件单独 commit 一次，不与业务代码混提交。
 
@@ -84,7 +102,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Compare-ProjectRul
 | `MISSING` | 项目缺该规则文件 | 直接跑 Install，只会补缺失的这几个，其余全部跳过 |
 | `CUSTOM` + 疑似缺少基线主题 | 项目自有规则落后于基线 | 二选一：**保守**——手工把缺的章节抄进项目规则（保留自有结构）；**彻底**——见下方"迁移到受控区块" |
 | `CUSTOM` 且主题齐全 | 项目自有成熟规则 | 可以不动；差异属措辞级，人工抽查 |
-| `DRIFT` | 受控区块被手改或版本落后 | 查 `.aicoding-rule.json` 的 overrides：登记过 → 合法覆盖；没登记 → 决定恢复区块（Install 重注）或补登记 |
+| `DRIFT` | 受控区块被手改或版本落后 | 查 `.aicoding-rule.json` 的 overrides：登记过 → 合法覆盖；没登记 → 决定备份并改名旧文件后用 Install 重建，或补登记 |
 
 **项目确实不想要某条基线规则** → 在 `.aicoding-rule.json` 的 `overrides` 登记（规则、决定、批准人、日期），下次 Compare/审阅先查这里。
 
@@ -110,9 +128,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Compare-ProjectRul
 | 看项目规则和基线差多少 | `Compare-ProjectRules.ps1`（只读；加 `-ShowDiff` 看差异行） |
 | 补缺失文件 / 首次接入 | `Install-AICodingRule.ps1`（先 `-WhatIf`；改 profile 前可加 `-Backup`） |
 | 项目事实变了 | 只改项目的 `05_PROJECT_CONTEXT.md`，不动规则区块 |
-| 想改通用规则本身 | 改 `core/`，升 `VERSION` + 记 `CHANGELOG`（须满足 core/05 #8 治理层门槛），各项目 Compare 后重注区块 |
+| 想改通用规则本身 | 改 `core/`，升 `VERSION` + 记 `CHANGELOG`（须满足 core/05 #8 治理层门槛），各项目 Compare 后按升级流程重建区块 |
 | 每个大阶段收口 | 复制 `prompts/periodic-maintenance.md` 给 AI 执行 |
 | 不确定项目状态、怕误改 | 复制 `prompts/audit-only.md` 给 AI（严格只读） |
+| 中高风险任务需要职责分离 | 先读 `workflows/three-authority-vibecoding/activation-rules.md`；项目需自包含时用 `-IncludeThreeAuthorityWorkflow` 安装 |
 
 ## 4. 升级流程（基线出新版本后）
 
@@ -120,15 +139,17 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Compare-ProjectRul
 # 项目侧：
 # 1. 看差异
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Compare-ProjectRules.ps1 -ProjectPath <项目路径>
-# 2. 人工确认无冲突后，重注区块：备份旧规则文件改名 → Install 重建 → 扩展区内容填回
+# 2. 人工确认无冲突后，重建区块：备份旧规则文件改名 → Install 重建 → 扩展区内容填回
 # （Audit 会持续报告"区块版本落后于基线"直到升级完成）
 ```
 
-扩展区内容在区块外，重注区块不影响它；但仍建议升级后 diff 复核一遍。
+重建前必须先备份扩展区内容，重建后人工填回并用 diff 复核；Install 不会覆盖或就地重写已有文件。
 
 ## 5. 常见问题
 
 - **PowerShell 报解析错误 / 中文乱码**：确认脚本文件是 UTF-8 **带 BOM**（仓库内已是）；控制台输出乱码可加 `[Console]::OutputEncoding=[Text.Encoding]::UTF8` 前缀执行。
 - **Compare 报"疑似缺少基线主题"但项目其实有**：该检查是标题级启发式（措辞不同、标题在代码块内都会误计），属"疑似"提示，以人工阅读为准。
 - **Install 想覆盖某个已存在文件**：不支持，这是有意设计。改名备份旧文件后再装，或手工合并。
+- **重复安装会不会清空 adapters / overrides**：不会。安装器保留现有 profile 的合法字段和首次安装时间；没有实际 profile 变化时不重写文件。
+- **安装三权模块后是否会自动启用**：不会。安装只复制自包含文档；风险分级、窗口隔离和正式交接必须由任务显式启用。
 - **AI 工具读哪个入口**：Claude Code 读 CLAUDE.md，其他工具读 AGENTS.md；两者等效，改约束必须同步。
