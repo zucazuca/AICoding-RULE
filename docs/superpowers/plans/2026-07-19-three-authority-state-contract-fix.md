@@ -52,11 +52,15 @@
 # 三权工作流永久自检：默认只读检查静态契约，可选执行临时安装冒烟测试。
 [CmdletBinding()]
 param(
-    [string]$BaselineRoot = (Split-Path -Parent $PSScriptRoot),
+    [string]$BaselineRoot,
     [switch]$RunInstallSmoke
 )
 
 $ErrorActionPreference = 'Stop'
+if ([string]::IsNullOrWhiteSpace($BaselineRoot)) {
+    # Windows PowerShell 5.1 在参数默认值阶段尚不能可靠读取 PSScriptRoot。
+    $BaselineRoot = Split-Path -Parent $PSScriptRoot
+}
 $BaselineRoot = (Resolve-Path -LiteralPath $BaselineRoot).Path
 $script:BaselineRoot = $BaselineRoot
 $script:Utf8Strict = New-Object System.Text.UTF8Encoding($false, $true)
