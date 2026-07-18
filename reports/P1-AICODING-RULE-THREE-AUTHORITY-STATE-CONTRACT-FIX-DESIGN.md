@@ -37,6 +37,8 @@
 
 失败状态必须由实际执行结果触发，不能把失败动作伪装成成功状态。
 
+状态输出权责保持三权分离：执行窗口只回报推送或发布动作的结果与失败证据，不自行裁决下一状态；审批窗口根据证据输出 `PUSHED`、`RELEASED`、`TEST_REQUEST` 或 `REPLAN`。
+
 ## 4. 状态行绑定规则
 
 状态行按候选提交是否存在分为两个阶段：
@@ -53,14 +55,15 @@
 - `workflows/three-authority-vibecoding/state-machine.md`
 - `workflows/three-authority-vibecoding/handoff-contract.md`
 - `workflows/three-authority-vibecoding/README.md`
+- `workflows/three-authority-vibecoding/examples.md`
 - `prompts/three-authority-vibecoding/approver-window.md`
 - `prompts/three-authority-vibecoding/executor-window.md`
 - `templates/three-authority-vibecoding/approval-record.md`
-- 与失败路径直接相关的三权示例
 - `USAGE.md`
+- `README.md` 中的脚本清单与自检入口
 - `scripts/Test-ThreeAuthorityWorkflow.ps1`
-- `VERSION`、`CHANGELOG.md`、`schemas/project-rule-profile.example.json`
-- 当前任务交接快照报告
+- `CHANGELOG.md` 的未发布修复记录
+- `reports/P1-AICODING-RULE-THREE-AUTHORITY-WORKFLOW-1-HANDOFF.md` 当前任务交接快照
 
 实际实现以最小一致性差异为准；没有契约变化的文件不修改。
 
@@ -70,19 +73,21 @@
 
 1. 状态表包含 `APPROVE_PUSH -> REPLAN`。
 2. 状态表包含 `APPROVE_RELEASE -> TEST_REQUEST | REPLAN`。
-3. 候选审批阶段不存在任务三元组形式的 `REPLAN`、`REJECT_SCOPE` 状态行。
-4. 候选阶段的提示词、模板和示例要求使用完整候选提交哈希。
-5. 工作流 README 与 `USAGE.md` 覆盖推送和发布失败路径。
+3. 审批提示词的“候选审查”和“最终裁决”两个阶段均不存在任务三元组形式的 `REPLAN`、`REJECT_SCOPE` 状态行。
+4. 交接契约明确区分候选产生前后的状态行格式。
+5. 候选阶段的审批提示词、审批模板和示例要求使用完整候选提交哈希。
+6. 执行窗口只回报动作结果和证据，下一状态仍由审批窗口裁决。
+7. 工作流 README 与 `USAGE.md` 覆盖推送和发布失败路径。
 
 脚本任一断言失败时返回非零退出码，并输出可定位的中文错误信息。
 
-交付验证另行运行既有 `Audit-AICodingRule.ps1`，核对已安装模块的必需文件与哈希；相对链接使用独立只读检查核对，避免把既有审计能力写得比实际更宽。
+交付验证分成两层：先运行上述只读静态自检；再在临时沙箱中预演并安装三权模块，运行既有 `Audit-AICodingRule.ps1` 核对必需文件与哈希。相对链接使用独立只读检查核对，避免把既有审计能力写得比实际更宽。
 
 ## 7. 版本与同步
 
-上游版本由 `0.2.0` 提升为 `0.2.1`，在变更记录中说明状态失败出口、候选哈希绑定和静态自检。规则画像示例同步版本号；历史说明中的最低版本条件不做追溯性改写。
+本次不修改 core，因此全局 `VERSION` 和规则画像示例仍保持 `0.2.0`。如果仅因可选模块修复提升全局版本，现有 `0.2.0` core 受控区块会被 `Audit-AICodingRule.ps1` 误报为落后；引入模块独立版本机制又超出本次最小修复范围。`CHANGELOG.md` 增加未发布修复记录，当前交接快照记录经验证的规则实现提交完整哈希，以此标识本次模块修复。
 
-上游验证并提交后，只把实际变化的分发文件同步到 `I:\work\gaozong`。同步后核对文件哈希、相对链接、既有项目审计和 Git 差异，保持“模块安装不等于任务启用”。
+上游验证并提交后，只把实际变化的分发文件同步到 `I:\work\gaozong`。同步清单明确排除上游 `README.md`、`CHANGELOG.md`、自检脚本和交接报告。同步后记录上游完整提交哈希、实际文件清单和逐文件 SHA-256，并核对相对链接、既有项目审计和 Git 差异，保持“模块安装不等于任务启用”。
 
 ## 8. 风险控制
 
@@ -91,3 +96,4 @@
 - 上游与项目副本漂移：先提交上游，再按已变更分发文件逐项同步并核对哈希。
 - 文档结论陈旧：当前交接快照原位更新，不追加互相矛盾的新旧结论。
 - 安装器误覆盖：仍保持只创建缺失文件，不承担已安装模块升级。
+- 基线版本误报：可选模块修复不提升全局 core 版本，避免让既有受控区块产生虚假升级警告。
