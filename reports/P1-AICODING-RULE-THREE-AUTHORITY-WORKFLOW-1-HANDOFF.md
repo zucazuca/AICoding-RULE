@@ -11,12 +11,13 @@
 - 功能提交：`bf442458c83ddb9d495f303c9aa26f4216b8e6f6`
 - 复审修复提交：`61f12f48ce1666f1f4b42601b89f9eeded089b4a`
 - 状态契约修复提交：`4c250967f2250436aad9a7eb94fdec72ade7bf50`
-- 远端验收锚：以 `origin/master` 是否包含上述状态契约修复提交为准，读取本快照时必须实时核验
+- 测试窗口补充修复提交：`a4150ffb77e160987e31006340d893d3283ebd23`
+- 远端验收锚：以 `origin/master` 是否包含上述测试窗口补充修复提交为准，读取本快照时必须实时核验
 - 当前版本：`0.2.0`
 - 发布状态：未发布
 - 实现状态：修复完成并通过规格、技术、产品和安全复核；没有已知 Critical 或 Important 实现缺口
 
-本快照提交后，分支 HEAD 会是仅更新交接文档的后续提交；本轮实现与验证的证据锚始终是 `4c250967f2250436aad9a7eb94fdec72ade7bf50`，不使用本快照自引用。
+本快照提交后，分支 HEAD 会是仅更新交接文档的后续提交；主实现证据是 `4c250967f2250436aad9a7eb94fdec72ade7bf50`，包含补充修复的最终证据锚是 `a4150ffb77e160987e31006340d893d3283ebd23`，不使用本快照自引用。
 
 ## 2. 建议阅读顺序
 
@@ -42,7 +43,7 @@ templates/three-authority-vibecoding/   五类正式交接模板
 
 根 README、USAGE、核心执行规则和项目 README 模板只保留默认关闭的轻量入口。安装器通过 `-IncludeThreeAuthorityWorkflow` 按需复制完整模块；普通安装不复制也不启用该模块。
 
-本轮状态契约修复提交精确变更 11 个文件：新增 1 个永久自检脚本，修改 10 个契约、提示、模板和入口文档，共 654 行新增、34 行删除。安装映射、审计映射、VERSION、schema、core、entry-templates 和 project-templates 均未修改；可选模块仍是原有 15 个文件。
+本轮状态契约主修复提交精确变更 11 个文件：新增 1 个永久自检脚本，修改 10 个契约、提示、模板和入口文档，共 654 行新增、34 行删除。补充修复提交只修改 tester-window 和永久自检，共 14 行新增、4 行删除。安装映射、审计映射、VERSION、schema、core、entry-templates 和 project-templates 均未修改；可选模块仍是原有 15 个文件。
 
 ## 4. 冻结设计决定
 
@@ -82,8 +83,10 @@ templates/three-authority-vibecoding/   五类正式交接模板
 推送异常但远端成功边界（RED）                       83 checks；4 failures
 推送对账修复后                                       83 checks；0 failures
 最终多角色审查新增边界（RED）                       95 checks；10 failures
-永久静态自检                                         95 checks；0 failures
-真实安装与审计冒烟                                   122 checks；0 failures
+测试窗口候选哈希契约（RED）                         101 checks；4 failures
+环境阻塞候选绑定补测（RED）                         102 checks；1 failure
+永久静态自检                                         102 checks；0 failures
+真实安装与审计冒烟                                   129 checks；0 failures
 状态集合                                             20/20；转换表与主路径闭包 PASS
 PowerShell 脚本解析                                  0 errors
 git diff --check                                     PASS
@@ -122,8 +125,8 @@ git rev-parse HEAD
 git log -5 --oneline
 ```
 
-若 `origin/master` 尚未包含 `4c250967f2250436aad9a7eb94fdec72ade7bf50`，先完成分支集成与推送；若已包含，则本仓库没有必须继续施工的事项。下游项目只同步本实现提交实际修改的 7 个三权模块文件，不同步根 README、USAGE、CHANGELOG、自检脚本、报告或计划。
+若 `origin/master` 尚未包含 `a4150ffb77e160987e31006340d893d3283ebd23`，先完成分支集成与推送；若已包含，则本仓库没有必须继续施工的事项。下游项目只同步两份实现提交实际修改的 8 个三权模块文件，不同步根 README、USAGE、CHANGELOG、自检脚本、报告或计划。
 
-最终验收：工作区为空，`master` 与 `origin/master` 一致，且 `git branch -r --contains 4c250967f2250436aad9a7eb94fdec72ade7bf50` 包含 `origin/master`。
+最终验收：工作区为空，`master` 与 `origin/master` 一致，且 `git branch -r --contains a4150ffb77e160987e31006340d893d3283ebd23` 包含 `origin/master`。
 
 禁止事项：不要把三个长 Prompt 加入 Required Reading；不要默认启用工作流；不要恢复旧的预提交审批流程；不要把 L0/L1 强制升级为完整三权；不要绕过不可变哈希、制品摘要或人工 Owner 边界。
