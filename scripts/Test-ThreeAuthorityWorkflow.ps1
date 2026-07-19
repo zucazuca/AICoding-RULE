@@ -298,10 +298,13 @@ foreach ($section in @(@{ Name = '审查候选提交'; Text = $reviewCandidate }
 
 $handoff = Read-Utf8 'workflows/three-authority-vibecoding/handoff-contract.md'
 $executor = Read-Utf8 'prompts/three-authority-vibecoding/executor-window.md'
+$tester = Read-Utf8 'prompts/three-authority-vibecoding/tester-window.md'
 $handoffPushRelease = Get-MarkdownSection $handoff '推送、发布与 Owner 证据'
 $handoffReasonCodes = Get-MarkdownSection $handoff '原因码'
 $executorBoundary = Get-MarkdownSection $executor '角色边界'
 $executorActions = Get-MarkdownSection $executor '返工与批准动作'
+$testerPreflight = Get-MarkdownSection $tester '测试前强制预检'
+$testerReturn = Get-MarkdownSection $tester '回传'
 Assert-Match 'handoff 原因码候选前示例' $handoffReasonCodes '<STATE>\s+<Task-ID>\s+<Plan-Revision>\s+<Base-Commit>' '原因码章节缺少候选前状态示例'
 Assert-Match 'handoff 原因码候选后示例' $handoffReasonCodes '<STATE>\s+<full-candidate-hash>' '原因码章节缺少候选后状态示例'
 $executorAuthorityText = $executorBoundary + "`n" + $executorActions
@@ -315,6 +318,11 @@ Assert-Match 'RELEASED 交接健康检查匹配' $handoffPushRelease '(?s)健康
 Assert-Match 'RELEASED 执行窗口批准摘要匹配' $executorActions $approvedDigestPattern '执行窗口必须明确每个目标实际 Artifact-Digest 均等于批准摘要'
 Assert-Match 'RELEASED 执行窗口健康检查匹配' $executorActions '(?s)健康检查\s*(?:均匹配|均通过)[^。\r\n]*才可输出\s*RELEASED' '执行窗口必须明确健康检查均匹配或通过才可输出 RELEASED'
 Assert-Match '交接契约禁止重放旧 Owner 证据' $handoffPushRelease '(?s)旧\s*`?APPROVE_RELEASE`?[^。\r\n]{0,80}`?Owner-Evidence`?[^。\r\n]{0,120}不得重放' '交接契约必须同时禁止重放旧 APPROVE_RELEASE 和 Owner-Evidence'
+Assert-Match '测试窗口预检 TEST_BLOCKED 候选绑定' $testerPreflight '(?m)^\s*TEST_BLOCKED\s+<full-candidate-hash>\s+reason=HASH_NOT_VERIFIED\s*$' '哈希无法验证时仍必须回显请求的完整 Candidate-Commit'
+Assert-Match '测试窗口环境阻塞 TEST_BLOCKED 候选绑定' $testerPreflight 'TEST_BLOCKED\s+<full-candidate-hash>\s+reason=BLOCKED_ENVIRONMENT' '环境或依赖阻塞时仍必须回显请求的完整 Candidate-Commit'
+Assert-Match '测试窗口预检 Actual-HEAD 可未知' $testerPreflight '(?m)^\s*Actual-HEAD:\s*<actual-full-hash-or-UNKNOWN>\s*$' '无法解析的是 Actual-HEAD，必须与请求的 Candidate-Commit 分开记录'
+Assert-Match '测试窗口回传 TEST_BLOCKED 候选绑定' $testerReturn '(?m)^\s*TEST_BLOCKED\s+<full-candidate-hash>\s+reason=<code>\s*$' 'TEST_BLOCKED 回传必须绑定请求的完整候选哈希'
+Assert-NotMatch '测试窗口 TEST_BLOCKED 禁止 NONE' $tester '(?m)^\s*TEST_BLOCKED[^\r\n]*(?:-or-NONE|\bNONE\b)' 'TEST_BLOCKED 不得把请求的候选哈希降级为 NONE'
 
 $workflowReadme = Read-Utf8 'workflows/three-authority-vibecoding/README.md'
 $usage = Read-Utf8 'USAGE.md'
