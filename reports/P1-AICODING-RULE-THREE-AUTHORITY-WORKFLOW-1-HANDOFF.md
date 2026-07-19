@@ -6,16 +6,17 @@
 ## 1. 当前结论
 
 - Task-ID：`P1-AICODING-RULE-THREE-AUTHORITY-WORKFLOW-1`
-- 仓库分支：`master`
-- Base-Commit：`55504be034044bf9c42fbccf75c88337b365e30a`
+- 仓库分支：`fix/three-authority-state-contract`
+- 本轮修复基线：`02d5dfe`（状态契约修复计划提交）
 - 功能提交：`bf442458c83ddb9d495f303c9aa26f4216b8e6f6`
 - 复审修复提交：`61f12f48ce1666f1f4b42601b89f9eeded089b4a`
-- 远端状态：上述两个提交已推送到 `origin/master`
+- 状态契约修复提交：`4c250967f2250436aad9a7eb94fdec72ade7bf50`
+- 远端验收锚：以 `origin/master` 是否包含上述状态契约修复提交为准，读取本快照时必须实时核验
 - 当前版本：`0.2.0`
 - 发布状态：未发布
-- 实现状态：完成；没有已知 Critical 或 Important 实现缺口
+- 实现状态：修复完成并通过规格、技术、产品和安全复核；没有已知 Critical 或 Important 实现缺口
 
-本快照提交后，分支 HEAD 会是仅增加交接文档的后续提交；工作流实现与验证的证据锚仍是 `61f12f48ce1666f1f4b42601b89f9eeded089b4a`。
+本快照提交后，分支 HEAD 会是仅更新交接文档的后续提交；本轮实现与验证的证据锚始终是 `4c250967f2250436aad9a7eb94fdec72ade7bf50`，不使用本快照自引用。
 
 ## 2. 建议阅读顺序
 
@@ -41,7 +42,7 @@ templates/three-authority-vibecoding/   五类正式交接模板
 
 根 README、USAGE、核心执行规则和项目 README 模板只保留默认关闭的轻量入口。安装器通过 `-IncludeThreeAuthorityWorkflow` 按需复制完整模块；普通安装不复制也不启用该模块。
 
-从 Base 到实现证据锚共变更 28 个文件：18 个新增、10 个修改、0 个删除，合计 1631 行新增、32 行删除。
+本轮状态契约修复提交精确变更 11 个文件：新增 1 个永久自检脚本，修改 10 个契约、提示、模板和入口文档，共 654 行新增、34 行删除。安装映射、审计映射、VERSION、schema、core、entry-templates 和 project-templates 均未修改；可选模块仍是原有 15 个文件。
 
 ## 4. 冻结设计决定
 
@@ -53,7 +54,10 @@ templates/three-authority-vibecoding/   五类正式交接模板
 - amend、rebase、squash、merge、cherry-pick、冲突修复或受控内容变化产生新对象后，旧审批、测试和 Owner 证据失效。
 - 审批前验证 Base 是 Candidate 的祖先，并记录提交列表和父对象证据。
 - 推送信封绑定 remote、ref、expected remote hash，模式固定为 fast-forward-only；本工作流禁止强制推送。
+- 推送命令返回非零或异常后仍以精确 Push-Ref 的远端实际哈希为准；实际哈希等于 Candidate-Commit 时输出 PUSHED，否则只回传证据，由审批窗口裁决 REPLAN。
 - 发布任务在测试阶段构建并验证一次不可变制品；发布只提升被测试和批准的同一摘要，不得重新构建。
+- 发布前制品失效且没有部署副作用时回到 TEST_REQUEST；部署策略、目标环境或其他发布前提失效时 REPLAN；发布开始后的失败、部分成功或未知结果也 REPLAN。
+- 只有每个目标的实际 Artifact-Digest 均与批准摘要一致且健康检查均通过，才可输出 RELEASED；旧 APPROVE_RELEASE 和适用的 Owner-Evidence 不得重放。
 - 制品摘要对所有发布都必须绑定；人工 Owner 证据仅在 L3 或项目策略要求时必须绑定。
 - 测试环境阻塞、哈希不一致和关键未测都不等于通过。
 - 角色和流程不绑定模型或服务商。
@@ -70,36 +74,39 @@ templates/three-authority-vibecoding/   五类正式交接模板
 
 ## 6. 已执行验证
 
-关键结果：
+本轮关键结果：
 
 ```text
-git diff --check                                      PASS
-禁用旧流程词扫描                                     0 matches
-外部素材目录词扫描                                   0 matches
-命名模型/服务商扫描                                  0 matches
-状态机表                                             20/20
-五份模板必需字段                                     PASS
-源仓库 Markdown 相对链接                             PASS
-安装布局相对链接                                     23/23
-Windows PowerShell                                   5.1.19041.6456
-PowerShell 脚本解析与 UTF-8 BOM                      3/3
-WhatIf                                               0 writes
-默认安装                                             10 files；可选模块 absent
-默认安装第二次                                       tree digest unchanged
-Compare                                              4 MATCH；1 CUSTOM；0 DRIFT；0 MISSING
-可选安装                                             25 files；15 optional SHA-256 matches
+回归基线                                             79 checks；36 failures
+状态机与交接契约修复后                               79 checks；22 failures
+推送异常但远端成功边界（RED）                       83 checks；4 failures
+推送对账修复后                                       83 checks；0 failures
+最终多角色审查新增边界（RED）                       95 checks；10 failures
+永久静态自检                                         95 checks；0 failures
+真实安装与审计冒烟                                   122 checks；0 failures
+状态集合                                             20/20；转换表与主路径闭包 PASS
+PowerShell 脚本解析                                  0 errors
+git diff --check                                     PASS
+修改范围                                             11/11；禁改文件 0
+WhatIf                                               0 writes；目标整树不变
+默认安装                                             三权模块 absent
+可选安装                                             15 optional SHA-256 matches
 可选安装第二次                                       tree digest unchanged
-可选安装最终摘要                                     46BEC61E2C26AF1A16A13B84DDD5237CBEF3665BEFE3C6230AB35A065203DFB2
-Audit                                                WARN 0；模块已安装但默认关闭
-已有规则不覆盖                                       PASS
-可选文件漂移检测且不覆盖                             PASS
+Audit                                                exit 0；WARN 0；整树不变
+临时沙箱                                             已清理；残留 0
+VERSION / schema                                     0.2.0 / 0.2.0
 ```
 
-四份输入素材在任务结束时的 SHA-256 与开始读取时一致。正式交付内容没有素材目录引用或运行时依赖。
+永久自检命令：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Test-ThreeAuthorityWorkflow.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Test-ThreeAuthorityWorkflow.ps1 -RunInstallSmoke
+```
 
 ## 7. 已知残余风险
 
-- 仓库没有 CI、Pester 或其他仓库自带自动化测试套件；本次使用真实 PowerShell 5.1 脚本和断言沙箱验证。
+- 仓库仍没有 CI 或 Pester；已新增可直接运行的 PowerShell 5.1 永久自检，但需要本地或后续 CI 显式调用。
 - Compare 将普通文件形式的 `core/05_DOCUMENT_GOVERNANCE_RULES` 报为 `CUSTOM`，这是既有架构行为，不是本任务引入的漂移。
 - 新安装项目的 Audit 会把 CLAUDE/AGENTS 预期措辞差异列为 INFO；验证中 WARN 为 0。
 - 发布制品证据链目前是治理协议和模板，不包含具体制品仓库的技术实现；项目必须在执行包中冻结实际构建、摘要和提升命令。
@@ -115,8 +122,8 @@ git rev-parse HEAD
 git log -5 --oneline
 ```
 
-预期：分支为 `master`，工作区为空，HEAD 与 `origin/master` 一致。
+若 `origin/master` 尚未包含 `4c250967f2250436aad9a7eb94fdec72ade7bf50`，先完成分支集成与推送；若已包含，则本仓库没有必须继续施工的事项。下游项目只同步本实现提交实际修改的 7 个三权模块文件，不同步根 README、USAGE、CHANGELOG、自检脚本、报告或计划。
 
-没有必须继续施工的事项。若要增强，优先考虑为 Install/Audit 增加仓库内 PowerShell 5.1 回归测试；这属于新任务，必须重新确定范围并创建新提交，不得 amend 已推送提交。
+最终验收：工作区为空，`master` 与 `origin/master` 一致，且 `git branch -r --contains 4c250967f2250436aad9a7eb94fdec72ade7bf50` 包含 `origin/master`。
 
 禁止事项：不要把三个长 Prompt 加入 Required Reading；不要默认启用工作流；不要恢复旧的预提交审批流程；不要把 L0/L1 强制升级为完整三权；不要绕过不可变哈希、制品摘要或人工 Owner 边界。
