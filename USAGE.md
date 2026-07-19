@@ -650,7 +650,7 @@ CANDIDATE_READY <完整提交哈希>
 <粘贴完整 execution-report>
 
 请核验 Base-Commit 与 Candidate-Commit、祖先关系、提交历史、实际 diff、Allowed-Files、验收矩阵、自测证据和残余风险。
-候选不符合计划时输出 R1、R2、REPLAN 或 REJECT_SCOPE；符合时输出 APPROVE_TEST，并生成绑定同一完整 Candidate-Commit 的 TEST_WINDOW_INSTRUCTION。
+候选不符合计划时输出 `R1 <full-candidate-hash>`、`R2 <full-candidate-hash>`、`REPLAN <full-candidate-hash>` 或 `REJECT_SCOPE <full-candidate-hash>`；符合时输出 `APPROVE_TEST <full-candidate-hash>`，并生成绑定同一完整 Candidate-Commit 的 TEST_WINDOW_INSTRUCTION。
 不要修改代码，不要代替测试窗口宣布通过。
 ```
 
@@ -673,18 +673,19 @@ CANDIDATE_READY <完整提交哈希>
 
 测试失败后，审批窗口根据情况输出：
 
-- `R1`：局部、明确且仍在原计划内的返工；
-- `R2`：较大但仍未改变冻结目标的返工；
-- `REPLAN`：需求、范围、合同、基线或验收矩阵必须重写；
-- `REJECT_SCOPE`：请求越权或不属于当前任务。
+- `R1 <full-candidate-hash>`：局部、明确且仍在原计划内的返工；
+- `R2 <full-candidate-hash>`：较大但仍未改变冻结目标的返工；
+- `REPLAN <full-candidate-hash>`：需求、范围、合同、基线或验收矩阵必须重写；
+- `REJECT_SCOPE <full-candidate-hash>`：请求越权或不属于当前任务。
 
 任何代码变化、`amend`、`rebase`、`squash`、`merge`、`cherry-pick` 或冲突修复都会产生新候选哈希。旧审批和测试证据不能转移到新哈希，新候选必须重新进入：
 
 ```text
-CANDIDATE_READY
+CANDIDATE_READY <new-full-candidate-hash>
 → 候选审查
-→ APPROVE_TEST
-→ 独立测试
+→ APPROVE_TEST <new-full-candidate-hash>
+→ TEST_REQUEST <new-full-candidate-hash>
+→ 独立测试同一新候选
 ```
 
 ### 10.8 推送和生产发布
@@ -692,28 +693,44 @@ CANDIDATE_READY
 测试通过不等于允许推送。审批窗口还需明确输出：
 
 ```text
-APPROVE_PUSH <完整提交哈希>
+APPROVE_PUSH <full-candidate-hash>
 ```
 
-执行窗口只能按批准的远端、分支、预期远端哈希和显式 refspec 推送。工作流禁止强制推送。
+执行窗口只能按批准的远端、分支、预期远端哈希和显式 refspec 推送。工作流禁止强制推送。无论推送命令返回非零或异常，都必须重新读取精确 Push-Ref；若远端实际哈希等于 Candidate-Commit，仍应输出 `PUSHED <full-candidate-hash>`。
+
+若远端实际哈希仍等于 Expected-Remote-Hash 或为其他哈希，执行窗口只回传证据和 REMOTE_DRIFT；结果为 UNKNOWN 时只回传证据和 PUSH_OUTCOME_UNKNOWN，不自行输出 REPLAN。审批窗口核对后输出 `REPLAN <full-candidate-hash>`，旧 APPROVE_PUSH 不得重放或用于重试。
 
 L3 生产发布还必须经过：
 
 ```text
-OWNER_APPROVAL_REQUIRED
+OWNER_APPROVAL_REQUIRED <full-candidate-hash>
 → 人工负责人批准同一候选、环境和已测试制品摘要
-→ APPROVE_RELEASE
+→ APPROVE_RELEASE <full-candidate-hash>
 → 部署同一已测试制品
-→ RELEASED
+→ RELEASED <full-candidate-hash>
 ```
 
-批准后重新构建会改变制品证据，必须重新测试和批准。
+发布前且尚无部署副作用、Candidate-Commit 未变化时，制品缺失、需要重建或摘要变化由执行窗口只回传 ARTIFACT_INVALIDATED 和证据；审批窗口输出 `TEST_REQUEST <full-candidate-hash>`，旧测试结论、APPROVE_RELEASE 和 Owner-Evidence 失效。
+
+发布开始前，若部署策略、目标环境或其他发布前提变化或失效，执行窗口或获授权发布者只回传证据，由审批窗口输出 `REPLAN <full-candidate-hash>`；旧 APPROVE_RELEASE 和 Owner-Evidence 均失效且不得重放，重新发布前必须重新批准并在适用时取得新的 Owner 证据。
+
+发布已经开始后，已知失败或部分成功使用 RELEASE_PARTIAL，包括 0 个目标成功；结果无法确认时使用 RELEASE_OUTCOME_UNKNOWN。执行窗口只回传每个目标的实际摘要、健康检查、执行步骤和回滚情况，审批窗口输出 `REPLAN <full-candidate-hash>`；旧 APPROVE_RELEASE 和 Owner-Evidence 不得重放。
+
+只有全部目标的实际 Artifact-Digest 都等于批准摘要且健康检查均通过，执行窗口才可输出 RELEASED。批准后重新构建会改变制品证据，必须重新测试和批准。
 
 ---
 
 ## 11. 日常审计、比较和升级
 
 ### 11.1 快速体检
+
+验证基线仓库自身的三权工作流契约：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Test-ThreeAuthorityWorkflow.ps1
+```
+
+审计目标项目：
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass `

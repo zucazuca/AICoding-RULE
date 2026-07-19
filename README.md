@@ -27,7 +27,7 @@ adapters/              技术栈适配规则，项目按需启用（python-fasta
 workflows/              可选高级治理工作流（默认关闭，不进入 Required Reading）
 prompts/               按需任务与角色提示词（索引见 prompts/README.md）
 templates/             可复制的结构化交接模板（索引见 templates/README.md）
-scripts/               Install（安装，-WhatIf/-Backup）/ Audit（静态审计）/ Compare（基线比较）
+scripts/               Install（安装，-WhatIf/-Backup）/ Audit（静态审计）/ Compare（基线比较）/ Test-ThreeAuthorityWorkflow（三权工作流永久自检）
 schemas/               .aicoding-rule.json 项目档案示例（版本/启用的 adapters/合法覆盖登记）
 reports/               来源清单、冲突报告、维护报告模板
 archive/               基线自身的历史归档区
@@ -60,6 +60,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Compare-ProjectRul
 
 # 5. 可选：预演三权分离模块安装（复制不等于启用）
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Install-AICodingRule.ps1 -ProjectPath "..\你的项目" -IncludeThreeAuthorityWorkflow -WhatIf
+
+# 6. 验证三权工作流状态与交接契约
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Test-ThreeAuthorityWorkflow.ps1
 ```
 
 `-Backup` 只备份需要更新的既有 `.aicoding-rule.json`，不是项目全量备份。新手先阅读 `USAGE.md`；理解路径、预演和人工确认边界后，再把 `prompts/project-bootstrap.md` 作为接入指令交给 AI。
